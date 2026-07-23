@@ -26,6 +26,28 @@ python3 -m http.server 4173 --directory site
 
 `site/data/trends.json`에서 키워드, 순위, 상태, 카테고리, 태그, 요약, 출처 수, 업데이트 시간을 수정하면 화면에 자동 반영됩니다. 카테고리 필터는 JSON의 `category` 값을 기준으로 자동 생성되고, 검색은 키워드/카테고리/태그/요약을 대상으로 동작합니다.
 
+
+## Supabase 초기 설정
+
+요뜨의 클라우드 데이터 저장소는 Supabase PostgreSQL을 기준으로 준비합니다. 테이블 생성 SQL은 `supabase/schema.sql`에 있으며, Supabase 프로젝트의 **SQL Editor**에서 해당 파일 내용을 실행하면 초기 테이블과 공개 조회 정책을 만들 수 있습니다.
+
+초기 스키마에는 다음 테이블이 포함됩니다.
+
+- `trends`: 실제 요뜨 화면에 노출할 트렌드
+- `trend_sources`: 트렌드별 출처/집계 정보
+- `trend_candidates`: 수집 프로그램이 저장하는 후보 키워드
+- `collection_runs`: 수집 작업 실행 기록
+
+보안상 실제 비밀값은 커밋하지 않습니다. 로컬/문서용 예시는 `.env.example`만 사용하고, 실제 값은 로컬 `.env` 또는 GitHub Actions Secrets에 저장합니다. 특히 `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`, DB 비밀번호는 브라우저 코드와 GitHub Pages 배포물에 넣으면 안 됩니다.
+
+GitHub Actions에서 향후 수집 프로그램을 실행할 때 필요한 Secrets 예시는 다음과 같습니다.
+
+```text
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+SUPABASE_DB_URL
+```
+
 ## GitHub Pages 배포
 
 이 저장소는 GitHub Actions로 정적 사이트를 GitHub Pages에 배포하도록 설정되어 있습니다. `main`, `master`, 또는 `work` 브랜치에 푸시하면 `.github/workflows/pages.yml` 워크플로가 실행되어 `site/` 폴더만 GitHub Pages artifact로 업로드해 호스팅합니다.
