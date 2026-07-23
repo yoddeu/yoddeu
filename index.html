@@ -66,73 +66,19 @@
             <p class="eyebrow">Today hot keywords</p>
             <h2 id="trends-title">오늘의 요뜨 랭킹</h2>
           </div>
-          <p class="updated">수동/반자동 큐레이션 · 1시간 단위 업데이트 예정</p>
+          <p class="updated" data-updated-text>트렌드 데이터 불러오는 중...</p>
         </div>
 
-        <div class="filter-bar" role="list" aria-label="카테고리 필터">
-          <button class="filter is-active" type="button">전체</button>
-          <button class="filter" type="button">사회</button>
-          <button class="filter" type="button">연예</button>
-          <button class="filter" type="button">테크</button>
-          <button class="filter" type="button">게임</button>
-          <button class="filter" type="button">밈</button>
+        <div class="trend-tools" aria-label="트렌드 탐색 도구">
+          <label class="search-box">
+            <span class="sr-only">키워드 검색</span>
+            <input data-search-input type="search" placeholder="키워드, 카테고리, 요약 검색" />
+          </label>
+          <div class="filter-bar" data-filter-bar role="list" aria-label="카테고리 필터"></div>
         </div>
 
-        <div class="trend-grid">
-          <article class="trend-card trend-card--featured">
-            <div class="trend-card__topline">
-              <strong class="rank">#1</strong>
-              <span class="badge badge--hot">급상승</span>
-            </div>
-            <h3>여름 폭염 대응</h3>
-            <p>
-              전국적인 무더위와 전력 수요 증가로 생활 팁, 냉방비, 야외 활동 안전 정보가 함께 언급되고 있어요.
-            </p>
-            <div class="trend-card__meta">
-              <span>사회 · 생활</span>
-              <span>뉴스 42 · 커뮤니티 128</span>
-            </div>
-          </article>
-
-          <article class="trend-card">
-            <div class="trend-card__topline">
-              <strong class="rank">#2</strong>
-              <span class="badge">상승 중</span>
-            </div>
-            <h3>AI 영상 생성</h3>
-            <p>짧은 영상 제작 도구와 크리에이터 활용 사례가 퍼지며 제작 비용과 저작권 논의가 커지고 있어요.</p>
-            <div class="trend-card__meta">
-              <span>테크 · 크리에이터</span>
-              <span>유튜브 31 · 뉴스 18</span>
-            </div>
-          </article>
-
-          <article class="trend-card">
-            <div class="trend-card__topline">
-              <strong class="rank">#3</strong>
-              <span class="badge">관심 지속</span>
-            </div>
-            <h3>주말 팝업스토어</h3>
-            <p>브랜드 팝업 방문 후기와 굿즈 인증이 확산되며 데이트 코스, 예약 팁 키워드가 함께 뜨고 있어요.</p>
-            <div class="trend-card__meta">
-              <span>라이프 · 쇼핑</span>
-              <span>SNS 76 · 커뮤니티 54</span>
-            </div>
-          </article>
-
-          <article class="trend-card">
-            <div class="trend-card__topline">
-              <strong class="rank">#4</strong>
-              <span class="badge badge--meme">밈 확산</span>
-            </div>
-            <h3>출근길 챌린지</h3>
-            <p>직장인 공감 숏폼과 패러디 이미지가 빠르게 공유되며 여러 커뮤니티에서 댓글 반응이 이어지고 있어요.</p>
-            <div class="trend-card__meta">
-              <span>밈 · 커뮤니티</span>
-              <span>커뮤니티 212 · 숏폼 35</span>
-            </div>
-          </article>
-        </div>
+        <div class="trend-grid" data-trend-grid aria-live="polite"></div>
+        <p class="empty-state" data-empty-state hidden>조건에 맞는 트렌드가 아직 없어요.</p>
       </section>
 
       <section class="section split" id="workflow" aria-labelledby="workflow-title">
@@ -160,5 +106,6 @@
         </p>
       </section>
     </main>
+    <script src="app.js"></script>
   </body>
 </html>
