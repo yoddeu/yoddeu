@@ -9,6 +9,25 @@ const filterBar = document.querySelector('[data-filter-bar]');
 const searchInput = document.querySelector('[data-search-input]');
 const updatedText = document.querySelector('[data-updated-text]');
 const emptyState = document.querySelector('[data-empty-state]');
+const menuToggle = document.querySelector('[data-menu-toggle]');
+const menu = document.querySelector('[data-menu]');
+
+
+function setMenuOpen(isOpen) {
+  menuToggle.setAttribute('aria-expanded', String(isOpen));
+  menu.classList.toggle('is-open', isOpen);
+}
+
+menuToggle.addEventListener('click', () => {
+  const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
+  setMenuOpen(!isOpen);
+});
+
+menu.addEventListener('click', (event) => {
+  if (event.target.matches('a')) {
+    setMenuOpen(false);
+  }
+});
 
 const statusClassMap = {
   급상승: 'badge--hot',

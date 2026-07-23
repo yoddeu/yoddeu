@@ -14,7 +14,13 @@
     <header class="hero">
       <nav class="nav" aria-label="주요 메뉴">
         <a class="logo" href="#top" aria-label="요뜨 홈">요뜨</a>
-        <div class="nav__links">
+        <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="primary-menu" data-menu-toggle>
+          <span class="sr-only">메뉴 열기</span>
+          <span class="nav__toggle-line" aria-hidden="true"></span>
+          <span class="nav__toggle-line" aria-hidden="true"></span>
+          <span class="nav__toggle-line" aria-hidden="true"></span>
+        </button>
+        <div class="nav__links" id="primary-menu" data-menu>
           <a href="#trends">랭킹</a>
           <a href="#workflow">운영 방식</a>
           <a href="#creators">크리에이터</a>
