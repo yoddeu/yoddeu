@@ -12,23 +12,23 @@
 
 ## 실행 방법
 
-트렌드 데이터는 `data/trends.json`에 분리되어 있고, `app.js`가 해당 데이터를 불러와 카드형 랭킹과 필터를 렌더링합니다. 브라우저 보안 정책 때문에 데이터 로딩 확인은 로컬 서버 또는 GitHub Pages 환경에서 진행하는 것을 권장합니다.
+정적 사이트 파일은 `site/` 폴더에 있고, 트렌드 데이터는 `site/data/trends.json`에 분리되어 있습니다. `site/app.js`가 해당 데이터를 불러와 카드형 랭킹과 필터를 렌더링합니다. 브라우저 보안 정책 때문에 데이터 로딩 확인은 로컬 서버 또는 GitHub Pages 환경에서 진행하는 것을 권장합니다.
 
 로컬 서버로 확인하려면 다음 명령을 사용합니다.
 
 ```bash
-python3 -m http.server 4173
+python3 -m http.server 4173 --directory site
 ```
 
 이후 브라우저에서 `http://127.0.0.1:4173/`에 접속합니다.
 
 ## 데이터 수정 방법
 
-`data/trends.json`에서 키워드, 순위, 상태, 카테고리, 태그, 요약, 출처 수, 업데이트 시간을 수정하면 화면에 자동 반영됩니다. 카테고리 필터는 JSON의 `category` 값을 기준으로 자동 생성되고, 검색은 키워드/카테고리/태그/요약을 대상으로 동작합니다.
+`site/data/trends.json`에서 키워드, 순위, 상태, 카테고리, 태그, 요약, 출처 수, 업데이트 시간을 수정하면 화면에 자동 반영됩니다. 카테고리 필터는 JSON의 `category` 값을 기준으로 자동 생성되고, 검색은 키워드/카테고리/태그/요약을 대상으로 동작합니다.
 
 ## GitHub Pages 배포
 
-이 저장소는 GitHub Actions로 정적 사이트를 GitHub Pages에 배포하도록 설정되어 있습니다. `main`, `master`, 또는 `work` 브랜치에 푸시하면 `.github/workflows/pages.yml` 워크플로가 실행되어 저장소 루트의 `index.html`을 바로 호스팅합니다.
+이 저장소는 GitHub Actions로 정적 사이트를 GitHub Pages에 배포하도록 설정되어 있습니다. `main`, `master`, 또는 `work` 브랜치에 푸시하면 `.github/workflows/pages.yml` 워크플로가 실행되어 `site/` 폴더만 GitHub Pages artifact로 업로드해 호스팅합니다.
 
 배포 후 GitHub 저장소의 **Settings → Pages**에서 Source를 **GitHub Actions**로 설정하면 공개 URL에서 요뜨 MVP를 확인할 수 있습니다. 일반적인 프로젝트 페이지 주소는 다음 형식입니다.
 
