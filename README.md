@@ -71,6 +71,37 @@ SUPABASE_SERVICE_ROLE_KEY
 
 GitHub Actions 수집 워크플로는 `.github/workflows/collect-trends.yml`에 있으며, 매시간 실행되거나 수동으로 실행할 수 있습니다. `NEWS_RSS_URLS`는 GitHub Actions Variables에, `SUPABASE_URL`과 `SUPABASE_SERVICE_ROLE_KEY`는 GitHub Actions Secrets에 저장하세요.
 
+
+## 후보 집계와 트렌드 승격
+
+수집 성공 후에는 Supabase SQL Editor에서 `supabase/views.sql`을 실행해 후보 집계 View와 승격 함수를 추가합니다.
+
+- `trend_candidate_summary`: `trend_candidates`를 `normalized_keyword`별로 묶어 언급 수, 출처 수, 기사 수, 최근 수집 시각, 점수를 계산합니다.
+- `promote_candidate_to_trend(...)`: 후보 하나를 `trends`와 `trend_sources`로 승격합니다. 기본값은 `published=false`라서 운영자가 검수한 뒤 공개할 수 있습니다.
+
+후보 상위 목록은 다음 쿼리로 확인할 수 있습니다.
+
+```sql
+select *
+from public.trend_candidate_summary
+order by score desc, latest_collected_at desc
+limit 30;
+```
+
+후보를 검수용 트렌드 초안으로 승격하려면 다음처럼 실행합니다.
+
+```sql
+select public.promote_candidate_to_trend(
+  p_normalized_keyword := 'ai 영상',
+  p_category := '테크',
+  p_status := '상승 중',
+  p_summary := 'AI 영상 관련 뉴스 언급이 증가하고 있어요.',
+  p_publish := false
+);
+```
+
+Supabase Table Editor에서 내용을 확인한 뒤 공개하려면 `trends.published`를 `true`로 변경합니다. 공개 조회 정책은 `published=true`인 트렌드만 읽을 수 있게 설정되어 있습니다.
+
 ## GitHub Pages 배포
 
 이 저장소는 GitHub Actions로 정적 사이트를 GitHub Pages에 배포하도록 설정되어 있습니다. `main`, `master`, 또는 `work` 브랜치에 푸시하면 `.github/workflows/pages.yml` 워크플로가 실행되어 `site/` 폴더만 GitHub Pages artifact로 업로드해 호스팅합니다.
