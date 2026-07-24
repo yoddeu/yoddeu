@@ -125,6 +125,34 @@ window.YODDEU_CONFIG = {
 
 관리자 페이지에서는 Supabase SQL Editor에서 조회한 `trend_candidate_summary` JSON 결과를 붙여넣고, 후보별 카테고리/상태/요약을 조정한 뒤 `promote_candidate_to_trend(...)` 실행 SQL을 복사할 수 있습니다. 복사한 SQL은 Supabase SQL Editor에서 실행해 `published=false` 초안으로 승격합니다.
 
+
+## Supabase Edge Functions
+
+관리자 페이지가 DB를 직접 수정하지 않도록 Edge Function 초안을 `supabase/functions/`에 추가합니다. Edge Function은 서버 측에서 `SUPABASE_SERVICE_ROLE_KEY`를 사용하고, 브라우저는 service role key를 절대 알 필요가 없습니다.
+
+추가된 함수는 다음과 같습니다.
+
+- `list-candidates`: `trend_candidate_summary` 상위 후보를 조회합니다.
+- `promote-candidate`: 선택한 후보를 `promote_candidate_to_trend(...)`로 `trends` 초안에 승격합니다.
+
+배포 전 Supabase secrets에 다음 값을 설정합니다.
+
+```bash
+supabase secrets set SUPABASE_URL=...
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY=...
+supabase secrets set ADMIN_API_KEY=...
+supabase secrets set ADMIN_ALLOWED_ORIGIN=https://<github-username>.github.io
+```
+
+배포 예시는 다음과 같습니다.
+
+```bash
+supabase functions deploy list-candidates
+supabase functions deploy promote-candidate
+```
+
+초기 버전은 `x-admin-key` 헤더로 관리자 요청을 보호합니다. 운영 단계에서는 Supabase Auth 기반 관리자 권한 확인으로 강화하는 것을 권장합니다.
+
 ## GitHub Pages 배포
 
 이 저장소는 GitHub Actions로 정적 사이트를 GitHub Pages에 배포하도록 설정되어 있습니다. `main`, `master`, 또는 `work` 브랜치에 푸시하면 `.github/workflows/pages.yml` 워크플로가 실행되어 `site/` 폴더만 GitHub Pages artifact로 업로드해 호스팅합니다.
