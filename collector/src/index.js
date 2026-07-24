@@ -185,12 +185,35 @@ async function finishCollectionRun(runId, payload, dryRun) {
   });
 }
 
+function dedupeCandidates(candidates) {
+  const candidateMap = new Map();
+
+  for (const candidate of candidates) {
+    const key = [candidate.normalized_keyword, candidate.source_type, candidate.source_url].join('::');
+    const existing = candidateMap.get(key);
+
+    if (!existing) {
+      candidateMap.set(key, candidate);
+      continue;
+    }
+
+    existing.mention_count += candidate.mention_count;
+    existing.engagement_count += candidate.engagement_count;
+    if (candidate.keyword.length > existing.keyword.length) {
+      existing.keyword = candidate.keyword;
+    }
+  }
+
+  return [...candidateMap.values()];
+}
+
 async function saveCandidates(candidates, dryRun) {
   if (dryRun || candidates.length === 0) {
     return;
   }
 
-  const rows = candidates.map(({ feed_url: _feedUrl, ...candidate }) => candidate);
+  const rows = dedupeCandidates(candidates)
+    .map(({ feed_url: _feedUrl, ...candidate }) => candidate);
 
   await supabaseRequest('trend_candidates?on_conflict=normalized_keyword,source_type,source_url', {
     method: 'POST',
@@ -216,11 +239,13 @@ async function collect({ dryRun }) {
       allCandidates.push(...buildCandidates(items, feedUrl));
     }
 
-    await saveCandidates(allCandidates, dryRun);
+    const uniqueCandidates = dedupeCandidates(allCandidates);
+
+    await saveCandidates(uniqueCandidates, dryRun);
     await finishCollectionRun(run.id, {
       status: 'success',
       candidates_found: allCandidates.length,
-      candidates_saved: allCandidates.length,
+      candidates_saved: uniqueCandidates.length,
       metadata: { feed_count: feedUrls.length },
     }, dryRun);
 
@@ -253,4 +278,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     });
 }
 
-export { buildCandidates, collect, extractKeywords, parseFeedItems };
+export { buildCandidates, collect, dedupeCandidates, extractKeywords, parseFeedItems };

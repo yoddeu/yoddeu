@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildCandidates, extractKeywords, parseFeedItems } from '../src/index.js';
+import { buildCandidates, dedupeCandidates, extractKeywords, parseFeedItems } from '../src/index.js';
 
 const sampleRss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
@@ -36,4 +36,15 @@ test('buildCandidates maps feed items to Supabase rows', () => {
   assert.ok(candidates.length > 0);
   assert.equal(candidates[0].source_type, 'news_rss');
   assert.equal(candidates[0].source_url, 'https://example.com/news/ai-video');
+});
+
+
+test('dedupeCandidates removes duplicate upsert keys before Supabase insert', () => {
+  const items = parseFeedItems(sampleRss, 'https://example.com/rss');
+  const candidates = buildCandidates(items, 'https://example.com/rss');
+  const duplicated = [...candidates, ...candidates.map((candidate) => ({ ...candidate }))];
+  const deduped = dedupeCandidates(duplicated);
+
+  assert.equal(deduped.length, candidates.length);
+  assert.ok(deduped.every((candidate) => candidate.mention_count === 2));
 });
