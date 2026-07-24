@@ -153,6 +153,15 @@ supabase functions deploy promote-candidate
 
 초기 버전은 `x-admin-key` 헤더로 관리자 요청을 보호합니다. 운영 단계에서는 Supabase Auth 기반 관리자 권한 확인으로 강화하는 것을 권장합니다.
 
+### Dashboard 붙여넣기용 단일 파일
+
+컴퓨터나 Supabase CLI 없이 웹 대시보드에서 Edge Function을 만들 때는 `supabase/functions-dashboard/`의 단일 파일 버전을 사용합니다.
+
+- `supabase/functions-dashboard/list-candidates.ts`: `list-candidates` 함수 에디터에 전체 복사/붙여넣기
+- `supabase/functions-dashboard/promote-candidate.ts`: `promote-candidate` 함수 에디터에 전체 복사/붙여넣기
+
+이 파일들은 `_shared` import 없이 동작하도록 공통 CORS, 관리자 키 검증, Supabase service role client 생성 코드를 각각 포함합니다.
+
 ## GitHub Pages 배포
 
 이 저장소는 GitHub Actions로 정적 사이트를 GitHub Pages에 배포하도록 설정되어 있습니다. `main`, `master`, 또는 `work` 브랜치에 푸시하면 `.github/workflows/pages.yml` 워크플로가 실행되어 `site/` 폴더만 GitHub Pages artifact로 업로드해 호스팅합니다.
