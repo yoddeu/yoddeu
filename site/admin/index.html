@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>요뜨 관리자 | 후보 검수</title>
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <header class="admin-hero">
+      <nav class="admin-nav" aria-label="관리자 메뉴">
+        <a class="admin-logo" href="../">요뜨</a>
+        <a class="admin-link" href="../">사이트로 돌아가기</a>
+      </nav>
+      <section class="admin-hero__content">
+        <p class="eyebrow">Admin preview</p>
+        <h1>후보를 검수하고<br />승격 SQL을 복사하세요.</h1>
+        <p>
+          이 페이지는 브라우저에 Supabase service role key를 넣지 않는 안전한 관리자 초안입니다.
+          후보를 확인한 뒤 SQL Editor에서 실행할 승격 쿼리를 복사할 수 있습니다.
+        </p>
+      </section>
+    </header>
+
+    <main class="admin-main">
+      <section class="panel" aria-labelledby="paste-title">
+        <div>
+          <p class="eyebrow">Candidate input</p>
+          <h2 id="paste-title">Supabase 후보 집계 결과 붙여넣기</h2>
+          <p>
+            Supabase SQL Editor에서 `trend_candidate_summary` 조회 결과를 JSON으로 복사해 붙여넣으면
+            아래 카드가 해당 데이터로 바뀝니다. 비워두면 샘플 후보를 보여줍니다.
+          </p>
+        </div>
+        <label class="json-input">
+          <span>후보 JSON</span>
+          <textarea data-candidate-json placeholder='[{"normalized_keyword":"ai 영상","keyword":"AI 영상","score":32.5}]'></textarea>
+        </label>
+        <div class="panel-actions">
+          <button class="button button--primary" type="button" data-load-json>후보 불러오기</button>
+          <button class="button button--secondary" type="button" data-reset-sample>샘플 보기</button>
+        </div>
+        <p class="notice" data-message role="status"></p>
+      </section>
+
+      <section class="candidate-section" aria-labelledby="candidate-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Review queue</p>
+            <h2 id="candidate-title">승격 후보</h2>
+          </div>
+          <p class="muted">기본 승격 결과는 published=false 초안입니다.</p>
+        </div>
+        <div class="candidate-grid" data-candidate-grid></div>
+      </section>
+    </main>
+
+    <template data-candidate-template>
+      <article class="candidate-card">
+        <div class="candidate-card__topline">
+          <strong data-keyword></strong>
+          <span data-score></span>
+        </div>
+        <dl class="candidate-stats">
+          <div><dt>언급</dt><dd data-mention-count></dd></div>
+          <div><dt>출처</dt><dd data-source-count></dd></div>
+          <div><dt>기사</dt><dd data-article-count></dd></div>
+        </dl>
+        <div class="sample-list">
+          <strong>샘플 제목</strong>
+          <ul data-sample-titles></ul>
+        </div>
+        <label class="field">
+          <span>카테고리</span>
+          <select data-category>
+            <option>뉴스</option>
+            <option>사회</option>
+            <option>연예</option>
+            <option>테크</option>
+            <option>게임</option>
+            <option>경제</option>
+            <option>스포츠</option>
+            <option>라이프</option>
+            <option>밈</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>상태</span>
+          <select data-status>
+            <option>상승 중</option>
+            <option>급상승</option>
+            <option>관심 지속</option>
+            <option>밈 확산</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>요약</span>
+          <textarea data-summary rows="3"></textarea>
+        </label>
+        <pre data-sql></pre>
+        <button class="button button--primary" type="button" data-copy-sql>승격 SQL 복사</button>
+      </article>
+    </template>
+
+    <script src="admin.js"></script>
+  </body>
+</html>
