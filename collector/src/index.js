@@ -153,11 +153,13 @@ async function supabaseRequest(path, options = {}) {
     throw new Error(`Supabase request failed (${response.status}): ${body}`);
   }
 
-  if (response.status === 204) {
+  const body = await response.text();
+
+  if (!body) {
     return null;
   }
 
-  return response.json();
+  return JSON.parse(body);
 }
 
 async function createCollectionRun(dryRun) {
@@ -217,7 +219,7 @@ async function saveCandidates(candidates, dryRun) {
 
   await supabaseRequest('trend_candidates?on_conflict=normalized_keyword,source_type,source_url', {
     method: 'POST',
-    headers: { prefer: 'resolution=merge-duplicates' },
+    headers: { prefer: 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify(rows),
   });
 }

@@ -48,3 +48,48 @@ test('dedupeCandidates removes duplicate upsert keys before Supabase insert', ()
   assert.equal(deduped.length, candidates.length);
   assert.ok(deduped.every((candidate) => candidate.mention_count === 2));
 });
+
+
+test('collect handles empty successful Supabase responses', async () => {
+  const originalFetch = globalThis.fetch;
+  const feedUrl = 'https://example.com/rss';
+  process.env.NEWS_RSS_URLS = feedUrl;
+  process.env.SUPABASE_URL = 'https://example.supabase.co';
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
+
+  globalThis.fetch = async (url) => {
+    const value = String(url);
+
+    if (value === feedUrl) {
+      return new Response(sampleRss, { status: 200 });
+    }
+
+    if (value.includes('/rest/v1/collection_runs') && value.includes('id=eq.')) {
+      return new Response(null, { status: 204 });
+    }
+
+    if (value.endsWith('/rest/v1/collection_runs')) {
+      return new Response(JSON.stringify([{ id: 'run-1' }]), {
+        status: 201,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+
+    if (value.includes('/rest/v1/trend_candidates')) {
+      return new Response('', { status: 201 });
+    }
+
+    throw new Error(`unexpected fetch URL: ${value}`);
+  };
+
+  try {
+    const { collect } = await import('../src/index.js');
+    const candidates = await collect({ dryRun: false });
+    assert.ok(candidates.length > 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    delete process.env.NEWS_RSS_URLS;
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  }
+});
