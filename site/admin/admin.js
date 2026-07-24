@@ -57,6 +57,14 @@ function getDefaultEdgeBaseUrl() {
   return '';
 }
 
+function formatEdgeError(error) {
+  if (error instanceof TypeError && error.message === 'Failed to fetch') {
+    return 'Edge Function에 연결하지 못했어요. base URL, 함수 배포 여부, ADMIN_ALLOWED_ORIGIN(CORS), x-admin-key를 확인해 주세요.';
+  }
+
+  return error.message;
+}
+
 function getAdminSettings() {
   return {
     edgeBaseUrl: edgeBaseUrlInput.value.trim().replace(/\/$/, ''),
@@ -126,7 +134,7 @@ async function loadCandidatesFromEdge() {
     renderCandidates();
     message.textContent = `${state.candidates.length}개 후보를 Edge Function에서 불러왔어요.`;
   } catch (error) {
-    message.textContent = error.message;
+    message.textContent = formatEdgeError(error);
   }
 }
 
@@ -182,7 +190,7 @@ function createCandidateCard(candidate) {
       const trendId = await promoteCandidateWithEdge(candidate, category.value, status.value, summary.value);
       message.textContent = `${candidate.keyword} 후보를 초안으로 승격했어요. trend_id=${trendId}`;
     } catch (error) {
-      message.textContent = error.message;
+      message.textContent = formatEdgeError(error);
     } finally {
       promoteButton.disabled = false;
     }

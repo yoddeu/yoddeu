@@ -1,27 +1,43 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-const allowedOrigin = Deno.env.get('ADMIN_ALLOWED_ORIGIN') || '*';
+function normalizeOrigin(value: string) {
+  try {
+    return new URL(value).origin;
+  } catch (_error) {
+    return value.replace(/\/$/, '');
+  }
+}
 
-const corsHeaders = {
-  'access-control-allow-origin': allowedOrigin,
-  'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type, x-admin-key',
-  'access-control-allow-methods': 'POST, OPTIONS',
-};
+function getAllowedOrigin(request: Request) {
+  const requestOrigin = request.headers.get('origin') || '*';
+  const configuredOrigins = (Deno.env.get('ADMIN_ALLOWED_ORIGIN') || '*')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+    .map(normalizeOrigin);
 
-type PromoteCandidatePayload = {
-  normalized_keyword?: string;
-  rank?: number | null;
-  status?: string;
-  category?: string;
-  summary?: string | null;
-  publish?: boolean;
-};
+  if (configuredOrigins.includes('*')) {
+    return '*';
+  }
 
-function jsonResponse(body: unknown, init: ResponseInit = {}) {
+  const normalizedRequestOrigin = normalizeOrigin(requestOrigin);
+  return configuredOrigins.includes(normalizedRequestOrigin) ? normalizedRequestOrigin : configuredOrigins[0];
+}
+
+function corsHeaders(request: Request) {
+  return {
+    'access-control-allow-origin': getAllowedOrigin(request),
+    'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type, x-admin-key',
+    'access-control-allow-methods': 'POST, OPTIONS',
+    vary: 'Origin',
+  };
+}
+
+function jsonResponse(request: Request, body: unknown, init: ResponseInit = {}) {
   return new Response(JSON.stringify(body), {
     ...init,
     headers: {
-      ...corsHeaders,
+      ...corsHeaders(request),
       'content-type': 'application/json',
       ...(init.headers || {}),
     },
@@ -33,11 +49,11 @@ function requireAdminKey(request: Request) {
   const actualKey = request.headers.get('x-admin-key');
 
   if (!expectedKey) {
-    return jsonResponse({ error: 'ADMIN_API_KEY is not configured.' }, { status: 500 });
+    return jsonResponse(request, { error: 'ADMIN_API_KEY is not configured.' }, { status: 500 });
   }
 
   if (actualKey !== expectedKey) {
-    return jsonResponse({ error: 'Unauthorized admin request.' }, { status: 401 });
+    return jsonResponse(request, { error: 'Unauthorized admin request.' }, { status: 401 });
   }
 
   return null;
@@ -59,13 +75,22 @@ function createAdminClient() {
   });
 }
 
+type PromoteCandidatePayload = {
+  normalized_keyword?: string;
+  rank?: number | null;
+  status?: string;
+  category?: string;
+  summary?: string | null;
+  publish?: boolean;
+};
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders(request) });
   }
 
   if (request.method !== 'POST') {
-    return jsonResponse({ error: 'Method not allowed.' }, { status: 405 });
+    return jsonResponse(request, { error: 'Method not allowed.' }, { status: 405 });
   }
 
   const unauthorized = requireAdminKey(request);
@@ -78,11 +103,11 @@ Deno.serve(async (request) => {
   try {
     payload = await request.json() as PromoteCandidatePayload;
   } catch (_error) {
-    return jsonResponse({ error: 'Request body must be valid JSON.' }, { status: 400 });
+    return jsonResponse(request, { error: 'Request body must be valid JSON.' }, { status: 400 });
   }
 
   if (!payload.normalized_keyword) {
-    return jsonResponse({ error: 'normalized_keyword is required.' }, { status: 400 });
+    return jsonResponse(request, { error: 'normalized_keyword is required.' }, { status: 400 });
   }
 
   const supabase = createAdminClient();
@@ -96,8 +121,8 @@ Deno.serve(async (request) => {
   });
 
   if (error) {
-    return jsonResponse({ error: error.message }, { status: 500 });
+    return jsonResponse(request, { error: error.message }, { status: 500 });
   }
 
-  return jsonResponse({ trend_id: data });
+  return jsonResponse(request, { trend_id: data });
 });

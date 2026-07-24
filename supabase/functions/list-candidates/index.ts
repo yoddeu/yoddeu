@@ -3,11 +3,11 @@ import { handleOptions, jsonResponse, requireAdminKey } from '../_shared/http.ts
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
-    return handleOptions();
+    return handleOptions(request);
   }
 
   if (request.method !== 'GET') {
-    return jsonResponse({ error: 'Method not allowed.' }, { status: 405 });
+    return jsonResponse(request, { error: 'Method not allowed.' }, { status: 405 });
   }
 
   const unauthorized = requireAdminKey(request);
@@ -27,8 +27,8 @@ Deno.serve(async (request) => {
     .limit(limit);
 
   if (error) {
-    return jsonResponse({ error: error.message }, { status: 500 });
+    return jsonResponse(request, { error: error.message }, { status: 500 });
   }
 
-  return jsonResponse({ candidates: data ?? [] });
+  return jsonResponse(request, { candidates: data ?? [] });
 });

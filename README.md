@@ -162,6 +162,9 @@ supabase functions deploy promote-candidate
 
 이 파일들은 `_shared` import 없이 동작하도록 공통 CORS, 관리자 키 검증, Supabase service role client 생성 코드를 각각 포함합니다.
 
+
+`Failed to fetch`가 표시되면 대부분 브라우저 CORS 또는 Edge Function URL 문제입니다. `ADMIN_ALLOWED_ORIGIN`에는 경로를 제외한 origin만 넣으세요. 예를 들어 `https://yoddeu.github.io/yoddeu`가 아니라 `https://yoddeu.github.io`처럼 설정합니다. 여러 origin은 쉼표로 구분할 수 있습니다.
+
 ## GitHub Pages 배포
 
 이 저장소는 GitHub Actions로 정적 사이트를 GitHub Pages에 배포하도록 설정되어 있습니다. `main`, `master`, 또는 `work` 브랜치에 푸시하면 `.github/workflows/pages.yml` 워크플로가 실행되어 `site/` 폴더만 GitHub Pages artifact로 업로드해 호스팅합니다.

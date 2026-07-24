@@ -12,11 +12,11 @@ type PromoteCandidatePayload = {
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
-    return handleOptions();
+    return handleOptions(request);
   }
 
   if (request.method !== 'POST') {
-    return jsonResponse({ error: 'Method not allowed.' }, { status: 405 });
+    return jsonResponse(request, { error: 'Method not allowed.' }, { status: 405 });
   }
 
   const unauthorized = requireAdminKey(request);
@@ -27,7 +27,7 @@ Deno.serve(async (request) => {
   const payload = await request.json() as PromoteCandidatePayload;
 
   if (!payload.normalized_keyword) {
-    return jsonResponse({ error: 'normalized_keyword is required.' }, { status: 400 });
+    return jsonResponse(request, { error: 'normalized_keyword is required.' }, { status: 400 });
   }
 
   const supabase = createAdminClient();
@@ -41,8 +41,8 @@ Deno.serve(async (request) => {
   });
 
   if (error) {
-    return jsonResponse({ error: error.message }, { status: 500 });
+    return jsonResponse(request, { error: error.message }, { status: 500 });
   }
 
-  return jsonResponse({ trend_id: data });
+  return jsonResponse(request, { trend_id: data });
 });
