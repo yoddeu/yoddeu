@@ -36,6 +36,7 @@ const loadButton = document.querySelector('[data-load-json]');
 const resetButton = document.querySelector('[data-reset-sample]');
 const message = document.querySelector('[data-message]');
 const edgeBaseUrlInput = document.querySelector('[data-edge-base-url]');
+const anonKeyInput = document.querySelector('[data-anon-key]');
 const adminKeyInput = document.querySelector('[data-admin-key]');
 const loadEdgeButton = document.querySelector('[data-load-edge]');
 const saveAdminSettingsButton = document.querySelector('[data-save-admin-settings]');
@@ -59,7 +60,7 @@ function getDefaultEdgeBaseUrl() {
 
 function formatEdgeError(error) {
   if (error instanceof TypeError && error.message === 'Failed to fetch') {
-    return 'Edge Function에 연결하지 못했어요. base URL, 함수 배포 여부, ADMIN_ALLOWED_ORIGIN(CORS), x-admin-key를 확인해 주세요.';
+    return 'Edge Function에 연결하지 못했어요. base URL, 함수 배포 여부, ADMIN_ALLOWED_ORIGIN(CORS), Supabase anon key, x-admin-key를 확인해 주세요.';
   }
 
   return error.message;
@@ -75,12 +76,14 @@ function getAdminSettings() {
 function saveAdminSettings() {
   const settings = getAdminSettings();
   sessionStorage.setItem('yoddeu_admin_edge_base_url', settings.edgeBaseUrl);
+  sessionStorage.setItem('yoddeu_admin_anon_key', settings.anonKey);
   sessionStorage.setItem('yoddeu_admin_key', settings.adminKey);
   message.textContent = '관리자 설정을 현재 브라우저 세션에 저장했어요.';
 }
 
 function restoreAdminSettings() {
   edgeBaseUrlInput.value = sessionStorage.getItem('yoddeu_admin_edge_base_url') || getDefaultEdgeBaseUrl();
+  anonKeyInput.value = sessionStorage.getItem('yoddeu_admin_anon_key') || config.SUPABASE_ANON_KEY || '';
   adminKeyInput.value = sessionStorage.getItem('yoddeu_admin_key') || '';
 }
 
@@ -101,15 +104,21 @@ function normalizeCandidate(candidate) {
 }
 
 async function edgeRequest(path, options = {}) {
-  const { edgeBaseUrl, adminKey } = getAdminSettings();
+  const { edgeBaseUrl, anonKey, adminKey } = getAdminSettings();
 
   if (!edgeBaseUrl || !adminKey) {
     throw new Error('Edge Function base URL과 Admin API Key를 입력해 주세요.');
   }
 
+  const authHeaders = anonKey ? {
+    apikey: anonKey,
+    authorization: `Bearer ${anonKey}`,
+  } : {};
+
   const response = await fetch(`${edgeBaseUrl}${path}`, {
     ...options,
     headers: {
+      ...authHeaders,
       'x-admin-key': adminKey,
       'content-type': 'application/json',
       ...(options.headers || {}),
@@ -120,6 +129,10 @@ async function edgeRequest(path, options = {}) {
   const data = body ? JSON.parse(body) : {};
 
   if (!response.ok) {
+    if (data.error === 'Missing authorization') {
+      throw new Error('Supabase anon/publishable key가 필요합니다. 관리자 설정에 anon key를 입력해 주세요.');
+    }
+
     throw new Error(data.error || `Edge Function 요청 실패: ${response.status}`);
   }
 

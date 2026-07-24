@@ -123,7 +123,7 @@ window.YODDEU_CONFIG = {
 
 관리자 페이지는 `site/admin/`에 있습니다. GitHub Pages 배포 후 `/admin/` 경로로 접근할 수 있으며, 브라우저에 `SUPABASE_SERVICE_ROLE_KEY`를 넣지 않고 Edge Function을 통해 후보 조회와 초안 승격을 수행합니다.
 
-관리자 페이지에서 Edge Function base URL과 `ADMIN_API_KEY`를 입력하면 `list-candidates`로 후보를 불러오고, 후보별 카테고리/상태/요약을 조정한 뒤 `promote-candidate`로 `published=false` 초안을 만들 수 있습니다. `ADMIN_API_KEY`는 코드에 저장하지 않고 현재 브라우저 세션에만 보관합니다. Edge Function을 사용할 수 없는 경우를 대비해 JSON 붙여넣기와 승격 SQL 복사 기능도 유지합니다.
+관리자 페이지에서 Edge Function base URL, Supabase anon/publishable key, `ADMIN_API_KEY`를 입력하면 `list-candidates`로 후보를 불러오고, 후보별 카테고리/상태/요약을 조정한 뒤 `promote-candidate`로 `published=false` 초안을 만들 수 있습니다. `ADMIN_API_KEY`는 코드에 저장하지 않고 현재 브라우저 세션에만 보관합니다. Edge Function을 사용할 수 없는 경우를 대비해 JSON 붙여넣기와 승격 SQL 복사 기능도 유지합니다.
 
 
 ## Supabase Edge Functions
@@ -164,6 +164,9 @@ supabase functions deploy promote-candidate
 
 
 `Failed to fetch`가 표시되면 대부분 브라우저 CORS 또는 Edge Function URL 문제입니다. `ADMIN_ALLOWED_ORIGIN`에는 경로를 제외한 origin만 넣으세요. 예를 들어 `https://yoddeu.github.io/yoddeu`가 아니라 `https://yoddeu.github.io`처럼 설정합니다. 여러 origin은 쉼표로 구분할 수 있습니다.
+
+
+`Missing authorization`이 표시되면 Supabase Functions gateway가 `Authorization` 헤더를 요구하는 상태입니다. 관리자 페이지의 `Supabase anon/publishable key` 입력란에 공개용 anon/publishable key를 넣으면 요청에 `apikey`와 `Authorization: Bearer ...` 헤더가 함께 전송됩니다. 이때도 `SUPABASE_SERVICE_ROLE_KEY`는 절대 브라우저에 입력하지 않습니다.
 
 ## GitHub Pages 배포
 
