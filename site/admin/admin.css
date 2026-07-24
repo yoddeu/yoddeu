@@ -41,7 +41,8 @@ a {
 .admin-nav,
 .candidate-card__topline,
 .section-heading,
-.panel-actions {
+.panel-actions,
+.candidate-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -139,7 +140,8 @@ h2 {
 }
 
 textarea,
-select {
+select,
+input {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -252,8 +254,17 @@ pre {
 
   .admin-nav,
   .section-heading,
-  .panel-actions {
+  .panel-actions,
+.candidate-actions {
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+.candidate-actions {
+  flex-wrap: wrap;
+}
+
+.candidate-actions .button {
+  flex: 1 1 180px;
 }

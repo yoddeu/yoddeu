@@ -35,9 +35,45 @@ const jsonInput = document.querySelector('[data-candidate-json]');
 const loadButton = document.querySelector('[data-load-json]');
 const resetButton = document.querySelector('[data-reset-sample]');
 const message = document.querySelector('[data-message]');
+const edgeBaseUrlInput = document.querySelector('[data-edge-base-url]');
+const adminKeyInput = document.querySelector('[data-admin-key]');
+const loadEdgeButton = document.querySelector('[data-load-edge]');
+const saveAdminSettingsButton = document.querySelector('[data-save-admin-settings]');
+const config = window.YODDEU_CONFIG ?? {};
 
 function escapeSql(value) {
   return String(value).replaceAll("'", "''");
+}
+
+function getDefaultEdgeBaseUrl() {
+  if (config.EDGE_FUNCTION_BASE_URL) {
+    return config.EDGE_FUNCTION_BASE_URL;
+  }
+
+  if (config.SUPABASE_URL) {
+    return `${config.SUPABASE_URL.replace(/\/$/, '')}/functions/v1`;
+  }
+
+  return '';
+}
+
+function getAdminSettings() {
+  return {
+    edgeBaseUrl: edgeBaseUrlInput.value.trim().replace(/\/$/, ''),
+    adminKey: adminKeyInput.value.trim(),
+  };
+}
+
+function saveAdminSettings() {
+  const settings = getAdminSettings();
+  sessionStorage.setItem('yoddeu_admin_edge_base_url', settings.edgeBaseUrl);
+  sessionStorage.setItem('yoddeu_admin_key', settings.adminKey);
+  message.textContent = '관리자 설정을 현재 브라우저 세션에 저장했어요.';
+}
+
+function restoreAdminSettings() {
+  edgeBaseUrlInput.value = sessionStorage.getItem('yoddeu_admin_edge_base_url') || getDefaultEdgeBaseUrl();
+  adminKeyInput.value = sessionStorage.getItem('yoddeu_admin_key') || '';
 }
 
 function buildPromotionSql(candidate, category, status, summary) {
@@ -56,6 +92,59 @@ function normalizeCandidate(candidate) {
   };
 }
 
+async function edgeRequest(path, options = {}) {
+  const { edgeBaseUrl, adminKey } = getAdminSettings();
+
+  if (!edgeBaseUrl || !adminKey) {
+    throw new Error('Edge Function base URL과 Admin API Key를 입력해 주세요.');
+  }
+
+  const response = await fetch(`${edgeBaseUrl}${path}`, {
+    ...options,
+    headers: {
+      'x-admin-key': adminKey,
+      'content-type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+
+  const body = await response.text();
+  const data = body ? JSON.parse(body) : {};
+
+  if (!response.ok) {
+    throw new Error(data.error || `Edge Function 요청 실패: ${response.status}`);
+  }
+
+  return data;
+}
+
+async function loadCandidatesFromEdge() {
+  try {
+    saveAdminSettings();
+    const data = await edgeRequest('/list-candidates?limit=30', { method: 'GET' });
+    state.candidates = (data.candidates ?? []).map(normalizeCandidate).filter((candidate) => candidate.normalized_keyword);
+    renderCandidates();
+    message.textContent = `${state.candidates.length}개 후보를 Edge Function에서 불러왔어요.`;
+  } catch (error) {
+    message.textContent = error.message;
+  }
+}
+
+async function promoteCandidateWithEdge(candidate, category, status, summary) {
+  const data = await edgeRequest('/promote-candidate', {
+    method: 'POST',
+    body: JSON.stringify({
+      normalized_keyword: candidate.normalized_keyword,
+      category,
+      status,
+      summary,
+      publish: false,
+    }),
+  });
+
+  return data.trend_id;
+}
+
 function createCandidateCard(candidate) {
   const fragment = template.content.cloneNode(true);
   const card = fragment.querySelector('.candidate-card');
@@ -64,6 +153,7 @@ function createCandidateCard(candidate) {
   const summary = fragment.querySelector('[data-summary]');
   const sql = fragment.querySelector('[data-sql]');
   const copyButton = fragment.querySelector('[data-copy-sql]');
+  const promoteButton = fragment.querySelector('[data-promote-edge]');
   const sampleTitles = fragment.querySelector('[data-sample-titles]');
 
   fragment.querySelector('[data-keyword]').textContent = candidate.keyword;
@@ -86,6 +176,18 @@ function createCandidateCard(candidate) {
   category.addEventListener('change', updateSql);
   status.addEventListener('change', updateSql);
   summary.addEventListener('input', updateSql);
+  promoteButton.addEventListener('click', async () => {
+    try {
+      promoteButton.disabled = true;
+      const trendId = await promoteCandidateWithEdge(candidate, category.value, status.value, summary.value);
+      message.textContent = `${candidate.keyword} 후보를 초안으로 승격했어요. trend_id=${trendId}`;
+    } catch (error) {
+      message.textContent = error.message;
+    } finally {
+      promoteButton.disabled = false;
+    }
+  });
+
   copyButton.addEventListener('click', async () => {
     await navigator.clipboard.writeText(sql.textContent);
     message.textContent = `${candidate.keyword} 승격 SQL을 복사했어요.`;
@@ -111,6 +213,9 @@ function loadCandidatesFromJson() {
   }
 }
 
+restoreAdminSettings();
+loadEdgeButton.addEventListener('click', loadCandidatesFromEdge);
+saveAdminSettingsButton.addEventListener('click', saveAdminSettings);
 loadButton.addEventListener('click', loadCandidatesFromJson);
 resetButton.addEventListener('click', () => {
   state.candidates = sampleCandidates;

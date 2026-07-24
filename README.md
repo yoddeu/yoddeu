@@ -121,9 +121,9 @@ window.YODDEU_CONFIG = {
 
 ## 관리자 페이지 초안
 
-읽기 전용 관리자 페이지 초안은 `site/admin/`에 있습니다. GitHub Pages 배포 후 `/admin/` 경로로 접근할 수 있으며, 현재 버전은 브라우저에 `SUPABASE_SERVICE_ROLE_KEY`를 넣지 않기 위해 DB를 직접 변경하지 않습니다.
+관리자 페이지는 `site/admin/`에 있습니다. GitHub Pages 배포 후 `/admin/` 경로로 접근할 수 있으며, 브라우저에 `SUPABASE_SERVICE_ROLE_KEY`를 넣지 않고 Edge Function을 통해 후보 조회와 초안 승격을 수행합니다.
 
-관리자 페이지에서는 Supabase SQL Editor에서 조회한 `trend_candidate_summary` JSON 결과를 붙여넣고, 후보별 카테고리/상태/요약을 조정한 뒤 `promote_candidate_to_trend(...)` 실행 SQL을 복사할 수 있습니다. 복사한 SQL은 Supabase SQL Editor에서 실행해 `published=false` 초안으로 승격합니다.
+관리자 페이지에서 Edge Function base URL과 `ADMIN_API_KEY`를 입력하면 `list-candidates`로 후보를 불러오고, 후보별 카테고리/상태/요약을 조정한 뒤 `promote-candidate`로 `published=false` 초안을 만들 수 있습니다. `ADMIN_API_KEY`는 코드에 저장하지 않고 현재 브라우저 세션에만 보관합니다. Edge Function을 사용할 수 없는 경우를 대비해 JSON 붙여넣기와 승격 SQL 복사 기능도 유지합니다.
 
 
 ## Supabase Edge Functions
