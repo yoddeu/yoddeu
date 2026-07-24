@@ -27,10 +27,13 @@ const sampleCandidates = [
 
 const state = {
   candidates: sampleCandidates,
+  trends: [],
 };
 
 const grid = document.querySelector('[data-candidate-grid]');
 const template = document.querySelector('[data-candidate-template]');
+const trendList = document.querySelector('[data-trend-list]');
+const trendTemplate = document.querySelector('[data-trend-template]');
 const jsonInput = document.querySelector('[data-candidate-json]');
 const loadButton = document.querySelector('[data-load-json]');
 const resetButton = document.querySelector('[data-reset-sample]');
@@ -39,6 +42,7 @@ const edgeBaseUrlInput = document.querySelector('[data-edge-base-url]');
 const anonKeyInput = document.querySelector('[data-anon-key]');
 const adminKeyInput = document.querySelector('[data-admin-key]');
 const loadEdgeButton = document.querySelector('[data-load-edge]');
+const loadTrendsButton = document.querySelector('[data-load-trends]');
 const saveAdminSettingsButton = document.querySelector('[data-save-admin-settings]');
 const config = window.YODDEU_CONFIG ?? {};
 
@@ -104,6 +108,33 @@ function normalizeCandidate(candidate) {
   };
 }
 
+function normalizeTrend(trend) {
+  return {
+    id: trend.id ?? '',
+    rank: trend.rank ?? '-',
+    keyword: trend.keyword ?? '이름 없는 트렌드',
+    status: trend.status ?? '상승 중',
+    category: trend.category ?? '뉴스',
+    summary: trend.summary ?? '',
+    score: Number(trend.score ?? 0),
+    published: Boolean(trend.published),
+    updated_at: trend.updated_at ?? trend.updatedAt ?? '',
+  };
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return '업데이트 시간 없음';
+  }
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(value));
+}
+
 async function edgeRequest(path, options = {}) {
   const { edgeBaseUrl, anonKey, adminKey } = getAdminSettings();
 
@@ -150,6 +181,30 @@ async function loadCandidatesFromEdge() {
   } catch (error) {
     message.textContent = formatEdgeError(error);
   }
+}
+
+async function loadTrendsFromEdge() {
+  try {
+    saveAdminSettings();
+    const data = await edgeRequest('/list-trends?limit=50', { method: 'GET' });
+    state.trends = (data.trends ?? []).map(normalizeTrend).filter((trend) => trend.id);
+    renderTrends();
+    message.textContent = `${state.trends.length}개 트렌드를 Edge Function에서 불러왔어요.`;
+  } catch (error) {
+    message.textContent = formatEdgeError(error);
+  }
+}
+
+async function setTrendPublished(trend, published) {
+  const data = await edgeRequest('/set-trend-published', {
+    method: 'POST',
+    body: JSON.stringify({
+      trend_id: trend.id,
+      published,
+    }),
+  });
+
+  return normalizeTrend(data.trend);
 }
 
 async function promoteCandidateWithEdge(candidate, category, status, summary) {
@@ -203,6 +258,7 @@ function createCandidateCard(candidate) {
       promoteButton.disabled = true;
       const trendId = await promoteCandidateWithEdge(candidate, category.value, status.value, summary.value);
       message.textContent = `${candidate.keyword} 후보를 초안으로 승격했어요. trend_id=${trendId}`;
+      await loadTrendsFromEdge();
     } catch (error) {
       message.textContent = formatEdgeError(error);
     } finally {
@@ -217,6 +273,56 @@ function createCandidateCard(candidate) {
 
   updateSql();
   return card;
+}
+
+function createTrendCard(trend) {
+  const fragment = trendTemplate.content.cloneNode(true);
+  const card = fragment.querySelector('.trend-admin-card');
+  const badge = fragment.querySelector('[data-trend-published]');
+  const toggleButton = fragment.querySelector('[data-toggle-published]');
+
+  fragment.querySelector('[data-trend-keyword]').textContent = trend.keyword;
+  fragment.querySelector('[data-trend-summary]').textContent = trend.summary || '요약이 아직 없습니다.';
+  fragment.querySelector('[data-trend-rank]').textContent = trend.rank;
+  fragment.querySelector('[data-trend-status]').textContent = trend.status;
+  fragment.querySelector('[data-trend-category]').textContent = trend.category;
+  fragment.querySelector('[data-trend-score]').textContent = `점수 ${trend.score.toFixed(2)}`;
+  fragment.querySelector('[data-trend-updated]').textContent = formatDateTime(trend.updated_at);
+
+  badge.textContent = trend.published ? '공개 중' : '비공개 초안';
+  badge.classList.toggle('is-published', trend.published);
+  card.classList.toggle('is-published', trend.published);
+  toggleButton.textContent = trend.published ? '비공개로 전환' : '메인에 공개';
+  toggleButton.classList.toggle('button--secondary', trend.published);
+  toggleButton.classList.toggle('button--primary', !trend.published);
+
+  toggleButton.addEventListener('click', async () => {
+    try {
+      toggleButton.disabled = true;
+      const updatedTrend = await setTrendPublished(trend, !trend.published);
+      state.trends = state.trends.map((item) => item.id === updatedTrend.id ? updatedTrend : item);
+      renderTrends();
+      message.textContent = `${updatedTrend.keyword} 트렌드를 ${updatedTrend.published ? '공개' : '비공개'} 상태로 바꿨어요.`;
+    } catch (error) {
+      message.textContent = formatEdgeError(error);
+    } finally {
+      toggleButton.disabled = false;
+    }
+  });
+
+  return card;
+}
+
+function renderTrends() {
+  if (state.trends.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-admin-state';
+    empty.textContent = '아직 불러온 트렌드가 없어요. “트렌드 목록 불러오기”를 눌러 주세요.';
+    trendList.replaceChildren(empty);
+    return;
+  }
+
+  trendList.replaceChildren(...state.trends.map(createTrendCard));
 }
 
 function renderCandidates() {
@@ -237,6 +343,7 @@ function loadCandidatesFromJson() {
 
 restoreAdminSettings();
 loadEdgeButton.addEventListener('click', loadCandidatesFromEdge);
+loadTrendsButton.addEventListener('click', loadTrendsFromEdge);
 saveAdminSettingsButton.addEventListener('click', saveAdminSettings);
 loadButton.addEventListener('click', loadCandidatesFromJson);
 resetButton.addEventListener('click', () => {
@@ -246,4 +353,5 @@ resetButton.addEventListener('click', () => {
   message.textContent = '샘플 후보를 다시 표시했어요.';
 });
 
+renderTrends();
 renderCandidates();

@@ -268,3 +268,89 @@ pre {
 .candidate-actions .button {
   flex: 1 1 180px;
 }
+
+.trend-section {
+  margin-bottom: 56px;
+}
+
+.trend-admin-list {
+  display: grid;
+  gap: 16px;
+}
+
+.trend-admin-card {
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+.trend-admin-card.is-published {
+  border-color: rgba(255, 107, 44, 0.42);
+  background: linear-gradient(135deg, #fff 0%, #fff3e8 100%);
+}
+
+.trend-admin-card__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.trend-admin-card__topline strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.35rem;
+  letter-spacing: -0.04em;
+}
+
+.trend-admin-card__topline p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.trend-admin-card__topline span {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--brand-dark);
+  font-size: 0.86rem;
+  font-weight: 900;
+  padding: 8px 12px;
+}
+
+.trend-admin-card__topline span.is-published {
+  background: var(--brand);
+  color: #fff;
+}
+
+.trend-admin-stats dd {
+  font-size: 1rem;
+}
+
+.trend-admin-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.empty-admin-state {
+  border: 1px dashed var(--line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--muted);
+  margin: 0;
+  padding: 24px;
+}
+
+@media (max-width: 820px) {
+  .trend-admin-card__topline {
+    flex-direction: column;
+  }
+}

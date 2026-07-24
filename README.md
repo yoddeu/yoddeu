@@ -123,7 +123,7 @@ window.YODDEU_CONFIG = {
 
 관리자 페이지는 `site/admin/`에 있습니다. GitHub Pages 배포 후 `/admin/` 경로로 접근할 수 있으며, 브라우저에 `SUPABASE_SERVICE_ROLE_KEY`를 넣지 않고 Edge Function을 통해 후보 조회와 초안 승격을 수행합니다.
 
-관리자 페이지에서 Edge Function base URL, Supabase anon/publishable key, `ADMIN_API_KEY`를 입력하면 `list-candidates`로 후보를 불러오고, 후보별 카테고리/상태/요약을 조정한 뒤 `promote-candidate`로 `published=false` 초안을 만들 수 있습니다. `ADMIN_API_KEY`는 코드에 저장하지 않고 현재 브라우저 세션에만 보관합니다. Edge Function을 사용할 수 없는 경우를 대비해 JSON 붙여넣기와 승격 SQL 복사 기능도 유지합니다.
+관리자 페이지에서 Edge Function base URL, Supabase anon/publishable key, `ADMIN_API_KEY`를 입력하면 `list-candidates`로 후보를 불러오고, 후보별 카테고리/상태/요약을 조정한 뒤 `promote-candidate`로 `published=false` 초안을 만들 수 있습니다. 이후 `list-trends`로 승격된 트렌드를 확인하고 `set-trend-published`로 공개/비공개 상태를 전환할 수 있습니다. `ADMIN_API_KEY`는 코드에 저장하지 않고 현재 브라우저 세션에만 보관합니다. Edge Function을 사용할 수 없는 경우를 대비해 JSON 붙여넣기와 승격 SQL 복사 기능도 유지합니다.
 
 
 ## Supabase Edge Functions
@@ -134,6 +134,8 @@ window.YODDEU_CONFIG = {
 
 - `list-candidates`: `trend_candidate_summary` 상위 후보를 조회합니다.
 - `promote-candidate`: 선택한 후보를 `promote_candidate_to_trend(...)`로 `trends` 초안에 승격합니다.
+- `list-trends`: 승격된 `trends` 목록과 공개 상태를 조회합니다.
+- `set-trend-published`: 선택한 트렌드의 `published` 값을 공개/비공개로 전환합니다.
 
 배포 전 Supabase secrets에 다음 값을 설정합니다.
 
@@ -149,6 +151,8 @@ supabase secrets set ADMIN_ALLOWED_ORIGIN=https://<github-username>.github.io
 ```bash
 supabase functions deploy list-candidates
 supabase functions deploy promote-candidate
+supabase functions deploy list-trends
+supabase functions deploy set-trend-published
 ```
 
 초기 버전은 `x-admin-key` 헤더로 관리자 요청을 보호합니다. 운영 단계에서는 Supabase Auth 기반 관리자 권한 확인으로 강화하는 것을 권장합니다.
@@ -159,6 +163,8 @@ supabase functions deploy promote-candidate
 
 - `supabase/functions-dashboard/list-candidates.ts`: `list-candidates` 함수 에디터에 전체 복사/붙여넣기
 - `supabase/functions-dashboard/promote-candidate.ts`: `promote-candidate` 함수 에디터에 전체 복사/붙여넣기
+- `supabase/functions-dashboard/list-trends.ts`: `list-trends` 함수 에디터에 전체 복사/붙여넣기
+- `supabase/functions-dashboard/set-trend-published.ts`: `set-trend-published` 함수 에디터에 전체 복사/붙여넣기
 
 이 파일들은 `_shared` import 없이 동작하도록 공통 CORS, 관리자 키 검증, Supabase service role client 생성 코드를 각각 포함합니다.
 
