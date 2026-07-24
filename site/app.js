@@ -8,6 +8,7 @@ const trendGrid = document.querySelector('[data-trend-grid]');
 const filterBar = document.querySelector('[data-filter-bar]');
 const searchInput = document.querySelector('[data-search-input]');
 const updatedText = document.querySelector('[data-updated-text]');
+const sourceText = document.querySelector('[data-source-text]');
 const emptyState = document.querySelector('[data-empty-state]');
 const menuToggle = document.querySelector('[data-menu-toggle]');
 const menu = document.querySelector('[data-menu]');
@@ -178,36 +179,69 @@ async function fetchFallbackTrends() {
 
 async function fetchTrends() {
   if (!hasSupabaseConfig()) {
-    return fetchFallbackTrends();
+    return {
+      trends: await fetchFallbackTrends(),
+      source: 'fallback',
+      message: 'Supabase 설정이 없어 샘플 데이터를 표시 중입니다.',
+    };
   }
 
   try {
     const trends = await fetchSupabaseTrends();
-    return trends.length > 0 ? trends : fetchFallbackTrends();
+
+    if (trends.length > 0) {
+      return {
+        trends,
+        source: 'supabase',
+        message: 'Supabase 공개 트렌드를 표시 중입니다.',
+      };
+    }
+
+    return {
+      trends: await fetchFallbackTrends(),
+      source: 'fallback',
+      message: '공개된 Supabase 트렌드가 없어 샘플 데이터를 표시 중입니다.',
+    };
   } catch (error) {
     console.warn(error);
-    return fetchFallbackTrends();
+    return {
+      trends: await fetchFallbackTrends(),
+      source: 'fallback',
+      message: 'Supabase 데이터를 불러오지 못해 샘플 데이터를 표시 중입니다.',
+    };
   }
 }
 
 function renderUpdatedAt() {
   const latest = state.trends
     .map((trend) => new Date(trend.updatedAt))
+    .filter((date) => !Number.isNaN(date.getTime()))
     .sort((a, b) => b - a)[0];
 
   if (latest) {
     updatedText.textContent = `${formatUpdatedAt(latest)} 업데이트 · 수동/반자동 큐레이션`;
+  } else {
+    updatedText.textContent = '업데이트 시간 확인 중 · 수동/반자동 큐레이션';
   }
+}
+
+function renderSourceStatus(result) {
+  sourceText.textContent = result.message;
+  sourceText.dataset.source = result.source;
 }
 
 async function loadTrends() {
   try {
-    state.trends = await fetchTrends();
+    const result = await fetchTrends();
+    state.trends = result.trends;
     renderUpdatedAt();
+    renderSourceStatus(result);
     renderFilters();
     renderTrends();
   } catch (error) {
     trendGrid.innerHTML = '<p class="empty-state">트렌드 데이터를 불러오지 못했어요. 로컬 서버 또는 GitHub Pages에서 다시 확인해 주세요.</p>';
+    sourceText.textContent = '트렌드 데이터를 불러오지 못했습니다.';
+    sourceText.dataset.source = 'error';
     console.error(error);
   }
 }

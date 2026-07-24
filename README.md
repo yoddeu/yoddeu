@@ -106,7 +106,7 @@ Supabase Table Editor에서 내용을 확인한 뒤 공개하려면 `trends.publ
 
 ## Supabase 공개 트렌드 연결
 
-사이트는 기본적으로 Supabase의 `trends` API를 먼저 읽고, 설정이 없거나 공개된 트렌드가 없으면 `site/data/trends.json` 샘플 데이터로 fallback합니다.
+사이트는 기본적으로 Supabase의 `trends` API를 먼저 읽고, 설정이 없거나 공개된 트렌드가 없으면 `site/data/trends.json` 샘플 데이터로 fallback합니다. 메인 화면에는 현재 Supabase 공개 데이터인지 샘플 fallback인지 표시됩니다.
 
 GitHub Pages에서 Supabase 데이터를 표시하려면 `site/config.js`에 공개 조회용 값만 설정합니다.
 
@@ -117,7 +117,7 @@ window.YODDEU_CONFIG = {
 };
 ```
 
-`SUPABASE_ANON_KEY`는 공개 조회용 키만 사용해야 하며, `SUPABASE_SERVICE_ROLE_KEY`는 절대 `site/config.js`나 브라우저 코드에 넣으면 안 됩니다. 현재 RLS 정책은 `published=true`인 `trends`와 해당 출처만 공개 조회되도록 설계되어 있습니다.
+`SUPABASE_ANON_KEY`는 공개 조회용 키만 사용해야 하며, `SUPABASE_SERVICE_ROLE_KEY`는 절대 `site/config.js`나 브라우저 코드에 넣으면 안 됩니다. 현재 RLS 정책은 `published=true`인 `trends`와 해당 출처만 공개 조회되도록 설계되어 있습니다. 실제 데이터가 보이지 않으면 admin에서 트렌드를 공개로 전환했는지, `site/config.js`의 공개 Supabase URL/anon key가 배포본에 들어갔는지 확인하세요.
 
 ## 관리자 페이지 초안
 
