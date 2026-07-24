@@ -29,12 +29,18 @@ menu.addEventListener('click', (event) => {
   }
 });
 
+const config = window.YODDEU_CONFIG ?? {};
+
 const statusClassMap = {
   급상승: 'badge--hot',
   '밈 확산': 'badge--meme',
 };
 
-function formatSources(sources) {
+function formatSources(sources = []) {
+  if (sources.length === 0) {
+    return '출처 집계 준비 중';
+  }
+
   return sources.map((source) => `${source.name} ${source.count}`).join(' · ');
 }
 
@@ -118,6 +124,72 @@ function renderFilters() {
   );
 }
 
+function mapSupabaseTrend(row) {
+  const sources = row.trend_sources ?? [];
+
+  return {
+    rank: row.rank,
+    keyword: row.keyword,
+    status: row.status,
+    category: row.category,
+    tags: row.tags ?? [],
+    summary: row.summary,
+    sources: sources.map((source) => ({
+      name: source.source_name || source.source_type,
+      count: source.count ?? 0,
+    })),
+    updatedAt: row.updated_at,
+  };
+}
+
+function hasSupabaseConfig() {
+  return Boolean(config.SUPABASE_URL && config.SUPABASE_ANON_KEY);
+}
+
+async function fetchSupabaseTrends() {
+  const baseUrl = config.SUPABASE_URL.replace(/\/$/, '');
+  const query = new URLSearchParams({
+    select: 'rank,keyword,status,category,tags,summary,score,updated_at,trend_sources(source_type,source_name,count)',
+    published: 'eq.true',
+    order: 'rank.asc',
+  });
+
+  const response = await fetch(`${baseUrl}/rest/v1/trends?${query}`, {
+    headers: {
+      apikey: config.SUPABASE_ANON_KEY,
+      authorization: `Bearer ${config.SUPABASE_ANON_KEY}`,
+    },
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Supabase 트렌드 데이터를 불러오지 못했습니다: ${response.status} ${body}`);
+  }
+
+  return (await response.json()).map(mapSupabaseTrend);
+}
+
+async function fetchFallbackTrends() {
+  const response = await fetch('data/trends.json');
+  if (!response.ok) throw new Error('트렌드 데이터를 불러오지 못했습니다.');
+
+  return response.json();
+}
+
+async function fetchTrends() {
+  if (!hasSupabaseConfig()) {
+    return fetchFallbackTrends();
+  }
+
+  try {
+    const trends = await fetchSupabaseTrends();
+    return trends.length > 0 ? trends : fetchFallbackTrends();
+  } catch (error) {
+    console.warn(error);
+    return fetchFallbackTrends();
+  }
+}
+
 function renderUpdatedAt() {
   const latest = state.trends
     .map((trend) => new Date(trend.updatedAt))
@@ -130,10 +202,7 @@ function renderUpdatedAt() {
 
 async function loadTrends() {
   try {
-    const response = await fetch('data/trends.json');
-    if (!response.ok) throw new Error('트렌드 데이터를 불러오지 못했습니다.');
-
-    state.trends = await response.json();
+    state.trends = await fetchTrends();
     renderUpdatedAt();
     renderFilters();
     renderTrends();

@@ -103,6 +103,22 @@ select public.promote_candidate_to_trend(
 Supabase Table Editor에서 내용을 확인한 뒤 공개하려면 `trends.published`를 `true`로 변경합니다. 공개 조회 정책은 `published=true`인 트렌드만 읽을 수 있게 설정되어 있습니다.
 
 
+
+## Supabase 공개 트렌드 연결
+
+사이트는 기본적으로 Supabase의 `trends` API를 먼저 읽고, 설정이 없거나 공개된 트렌드가 없으면 `site/data/trends.json` 샘플 데이터로 fallback합니다.
+
+GitHub Pages에서 Supabase 데이터를 표시하려면 `site/config.js`에 공개 조회용 값만 설정합니다.
+
+```js
+window.YODDEU_CONFIG = {
+  SUPABASE_URL: 'https://your-project-ref.supabase.co',
+  SUPABASE_ANON_KEY: 'public-anon-or-publishable-key',
+};
+```
+
+`SUPABASE_ANON_KEY`는 공개 조회용 키만 사용해야 하며, `SUPABASE_SERVICE_ROLE_KEY`는 절대 `site/config.js`나 브라우저 코드에 넣으면 안 됩니다. 현재 RLS 정책은 `published=true`인 `trends`와 해당 출처만 공개 조회되도록 설계되어 있습니다.
+
 ## 관리자 페이지 초안
 
 읽기 전용 관리자 페이지 초안은 `site/admin/`에 있습니다. GitHub Pages 배포 후 `/admin/` 경로로 접근할 수 있으며, 현재 버전은 브라우저에 `SUPABASE_SERVICE_ROLE_KEY`를 넣지 않기 위해 DB를 직접 변경하지 않습니다.
