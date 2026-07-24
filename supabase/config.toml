@@ -1,0 +1,5 @@
+[functions.list-candidates]
+verify_jwt = false
+
+[functions.promote-candidate]
+verify_jwt = false
