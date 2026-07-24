@@ -48,6 +48,29 @@ SUPABASE_SERVICE_ROLE_KEY
 SUPABASE_DB_URL
 ```
 
+
+## 트렌드 후보 수집기
+
+뉴스 RSS 기반 수집기 초안은 `collector/`에 있습니다. 수집기는 `NEWS_RSS_URLS`에 등록된 RSS/Atom 피드를 읽고 기사 제목에서 후보 키워드를 추출한 뒤 `trend_candidates` 테이블에 저장합니다. 실행 기록은 `collection_runs`에 남깁니다.
+
+로컬에서 문법과 단위 테스트를 확인하려면 다음 명령을 사용합니다.
+
+```bash
+cd collector
+npm run check
+npm test
+```
+
+실제 Supabase에 저장하려면 로컬 `.env` 또는 GitHub Actions Secrets/Variables에 다음 값을 설정해야 합니다.
+
+```text
+NEWS_RSS_URLS
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+```
+
+GitHub Actions 수집 워크플로는 `.github/workflows/collect-trends.yml`에 있으며, 매시간 실행되거나 수동으로 실행할 수 있습니다. `NEWS_RSS_URLS`는 GitHub Actions Variables에, `SUPABASE_URL`과 `SUPABASE_SERVICE_ROLE_KEY`는 GitHub Actions Secrets에 저장하세요.
+
 ## GitHub Pages 배포
 
 이 저장소는 GitHub Actions로 정적 사이트를 GitHub Pages에 배포하도록 설정되어 있습니다. `main`, `master`, 또는 `work` 브랜치에 푸시하면 `.github/workflows/pages.yml` 워크플로가 실행되어 `site/` 폴더만 GitHub Pages artifact로 업로드해 호스팅합니다.

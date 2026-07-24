@@ -1,0 +1,15 @@
+{
+  "name": "yoddeu-collector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "RSS-based trend candidate collector for yoddeu.",
+  "scripts": {
+    "collect": "node src/index.js",
+    "check": "node --check src/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
