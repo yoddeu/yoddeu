@@ -102,6 +102,13 @@ select public.promote_candidate_to_trend(
 
 Supabase Table Editor에서 내용을 확인한 뒤 공개하려면 `trends.published`를 `true`로 변경합니다. 공개 조회 정책은 `published=true`인 트렌드만 읽을 수 있게 설정되어 있습니다.
 
+
+## 관리자 페이지 초안
+
+읽기 전용 관리자 페이지 초안은 `site/admin/`에 있습니다. GitHub Pages 배포 후 `/admin/` 경로로 접근할 수 있으며, 현재 버전은 브라우저에 `SUPABASE_SERVICE_ROLE_KEY`를 넣지 않기 위해 DB를 직접 변경하지 않습니다.
+
+관리자 페이지에서는 Supabase SQL Editor에서 조회한 `trend_candidate_summary` JSON 결과를 붙여넣고, 후보별 카테고리/상태/요약을 조정한 뒤 `promote_candidate_to_trend(...)` 실행 SQL을 복사할 수 있습니다. 복사한 SQL은 Supabase SQL Editor에서 실행해 `published=false` 초안으로 승격합니다.
+
 ## GitHub Pages 배포
 
 이 저장소는 GitHub Actions로 정적 사이트를 GitHub Pages에 배포하도록 설정되어 있습니다. `main`, `master`, 또는 `work` 브랜치에 푸시하면 `.github/workflows/pages.yml` 워크플로가 실행되어 `site/` 폴더만 GitHub Pages artifact로 업로드해 호스팅합니다.
