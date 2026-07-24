@@ -69,6 +69,7 @@ function formatEdgeError(error) {
 function getAdminSettings() {
   return {
     edgeBaseUrl: edgeBaseUrlInput.value.trim().replace(/\/$/, ''),
+    anonKey: anonKeyInput.value.trim(),
     adminKey: adminKeyInput.value.trim(),
   };
 }
