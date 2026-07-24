@@ -115,6 +115,7 @@ function normalizeTrend(trend) {
     keyword: trend.keyword ?? '이름 없는 트렌드',
     status: trend.status ?? '상승 중',
     category: trend.category ?? '뉴스',
+    tags: trend.tags ?? [],
     summary: trend.summary ?? '',
     score: Number(trend.score ?? 0),
     published: Boolean(trend.published),
@@ -207,6 +208,22 @@ async function setTrendPublished(trend, published) {
   return normalizeTrend(data.trend);
 }
 
+async function updateTrend(trend, updates) {
+  const data = await edgeRequest('/update-trend', {
+    method: 'POST',
+    body: JSON.stringify({
+      trend_id: trend.id,
+      ...updates,
+    }),
+  });
+
+  return normalizeTrend(data.trend);
+}
+
+function replaceTrend(updatedTrend) {
+  state.trends = state.trends.map((item) => item.id === updatedTrend.id ? updatedTrend : item);
+}
+
 async function promoteCandidateWithEdge(candidate, category, status, summary) {
   const data = await edgeRequest('/promote-candidate', {
     method: 'POST',
@@ -280,6 +297,13 @@ function createTrendCard(trend) {
   const card = fragment.querySelector('.trend-admin-card');
   const badge = fragment.querySelector('[data-trend-published]');
   const toggleButton = fragment.querySelector('[data-toggle-published]');
+  const saveButton = fragment.querySelector('[data-save-trend]');
+  const rankInput = fragment.querySelector('[data-edit-rank]');
+  const keywordInput = fragment.querySelector('[data-edit-keyword]');
+  const categoryInput = fragment.querySelector('[data-edit-category]');
+  const statusInput = fragment.querySelector('[data-edit-status]');
+  const tagsInput = fragment.querySelector('[data-edit-tags]');
+  const summaryInput = fragment.querySelector('[data-edit-summary]');
 
   fragment.querySelector('[data-trend-keyword]').textContent = trend.keyword;
   fragment.querySelector('[data-trend-summary]').textContent = trend.summary || '요약이 아직 없습니다.';
@@ -289,6 +313,13 @@ function createTrendCard(trend) {
   fragment.querySelector('[data-trend-score]').textContent = `점수 ${trend.score.toFixed(2)}`;
   fragment.querySelector('[data-trend-updated]').textContent = formatDateTime(trend.updated_at);
 
+  rankInput.value = Number.isFinite(Number(trend.rank)) ? trend.rank : '';
+  keywordInput.value = trend.keyword;
+  categoryInput.value = trend.category;
+  statusInput.value = trend.status;
+  tagsInput.value = trend.tags.join(', ');
+  summaryInput.value = trend.summary;
+
   badge.textContent = trend.published ? '공개 중' : '비공개 초안';
   badge.classList.toggle('is-published', trend.published);
   card.classList.toggle('is-published', trend.published);
@@ -296,11 +327,32 @@ function createTrendCard(trend) {
   toggleButton.classList.toggle('button--secondary', trend.published);
   toggleButton.classList.toggle('button--primary', !trend.published);
 
+  saveButton.addEventListener('click', async () => {
+    try {
+      saveButton.disabled = true;
+      const updatedTrend = await updateTrend(trend, {
+        rank: rankInput.value ? Number(rankInput.value) : null,
+        keyword: keywordInput.value,
+        category: categoryInput.value,
+        status: statusInput.value,
+        tags: tagsInput.value.split(',').map((tag) => tag.trim()).filter(Boolean),
+        summary: summaryInput.value,
+      });
+      replaceTrend(updatedTrend);
+      renderTrends();
+      message.textContent = `${updatedTrend.keyword} 트렌드 수정 내용을 저장했어요.`;
+    } catch (error) {
+      message.textContent = formatEdgeError(error);
+    } finally {
+      saveButton.disabled = false;
+    }
+  });
+
   toggleButton.addEventListener('click', async () => {
     try {
       toggleButton.disabled = true;
       const updatedTrend = await setTrendPublished(trend, !trend.published);
-      state.trends = state.trends.map((item) => item.id === updatedTrend.id ? updatedTrend : item);
+      replaceTrend(updatedTrend);
       renderTrends();
       message.textContent = `${updatedTrend.keyword} 트렌드를 ${updatedTrend.published ? '공개' : '비공개'} 상태로 바꿨어요.`;
     } catch (error) {

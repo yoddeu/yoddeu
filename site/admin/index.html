@@ -113,7 +113,49 @@
           <span data-trend-score></span>
           <span data-trend-updated></span>
         </div>
+        <div class="trend-edit-grid">
+          <label class="field">
+            <span>순위</span>
+            <input data-edit-rank type="number" min="1" step="1" />
+          </label>
+          <label class="field">
+            <span>키워드</span>
+            <input data-edit-keyword type="text" />
+          </label>
+          <label class="field">
+            <span>카테고리</span>
+            <select data-edit-category>
+              <option>뉴스</option>
+              <option>사회</option>
+              <option>연예</option>
+              <option>테크</option>
+              <option>게임</option>
+              <option>경제</option>
+              <option>스포츠</option>
+              <option>라이프</option>
+              <option>밈</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>상태</span>
+            <select data-edit-status>
+              <option>상승 중</option>
+              <option>급상승</option>
+              <option>관심 지속</option>
+              <option>밈 확산</option>
+            </select>
+          </label>
+          <label class="field trend-edit-grid__wide">
+            <span>태그</span>
+            <input data-edit-tags type="text" placeholder="쉼표로 구분: 뉴스, 테크" />
+          </label>
+          <label class="field trend-edit-grid__wide">
+            <span>요약</span>
+            <textarea data-edit-summary rows="3"></textarea>
+          </label>
+        </div>
         <div class="candidate-actions">
+          <button class="button button--primary" type="button" data-save-trend>수정 저장</button>
           <button class="button button--primary" type="button" data-toggle-published></button>
         </div>
       </article>
